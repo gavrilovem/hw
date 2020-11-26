@@ -54,13 +54,20 @@ abstract class Model
 
     public function getOne($params)
     {
-        $sql = "SELECT * FROM {$this->getTableName()} WHERE id = :id";
+        $condition = [];
+        foreach ($params as $column => $value) {
+            $condition[] = "$column = :$column";
+        }
+        $condition = implode(' AND ', $condition);
+        $sql = "SELECT * FROM {$this->getTableName()} WHERE $condition";
         return $this->getDB()->getOne($sql, $params);
     }
 
-    public function getAll()
+    public function getAll($sql = '')
     {
-        $sql = "SELECT * FROM {$this->getTableName()}";
+        if (!$sql) {
+            $sql = "SELECT * FROM {$this->getTableName()}";
+        }
         return $this->getDB()->getAll($sql);
     }
 }

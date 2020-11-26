@@ -5,23 +5,67 @@ namespace App\controllers;
 
 use App\models\User;
 
-class UserController
+class UserController extends ControllerFactory
 {
     protected $defaultAction = 'index';
 
-    public function run($action)
+    public function oneAction()
     {
-        if (empty($action)) {
-            $action = $this->defaultAction;
+        if ($_SESSION['user']['is_admin'] == '1') {
+            $id = (int)$_GET['id'];
+            return $this->render('user', [
+                'user' => (new User())->getOne(['id' => $id])
+            ]);
         }
+    }
 
-        $action .= 'Action';
-
-        if (!method_exists($this, $action)) {
-            return '404';
+    public function allAction()
+    {
+        if ($_SESSION['user']['is_admin'] == '1') {
+            return $this->render(
+                'users',
+                [
+                    'users' => (new User())->getAll()
+                ]
+            );
         }
+    }
 
-        return $this->$action();
+    public function signUpAction()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $user = $_POST['user'];
+            (new User)->save([
+                'login' => $user['login'],
+                'password' => password_hash($user['password'], PASSWORD_DEFAULT)
+            ]);
+        }
+        return $this->render('sign');
+    }
+
+    public function signInAction()
+    {
+        session_start();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' and !isset($_SESSION['user'])) {
+            $inputUser = $_POST['user'];
+            $user = (new User())->getOne([
+                'login' => $inputUser['login']
+            ]);
+            if ($user and password_verify($inputUser['password'], $user['password'])) {
+                $_SESSION['user'] = $user;
+            }
+            header('Location: ' . '/');
+        }
+        return $this->render('sign');
+    }
+
+    public function signOutAction()
+    {
+        session_start();
+        if (isset($_SESSION['user'])) {
+            unset($_SESSION['user']);
+        }
+        header('Location: ' . $_SERVER['HTTP_REFERER']);
     }
 
     protected function indexAction()
@@ -30,42 +74,5 @@ class UserController
             'title' => 'Заголовок',
             'text' => 'Текст'
         ]);
-    }
-
-    public function allAction()
-    {
-        return $this->render(
-            'users',
-            [
-                'users' => (new User())->getAll()
-            ]
-        );
-    }
-
-    public function oneAction()
-    {
-        $id = (int) $_GET['id'];
-        return $this->render(
-            'user',
-            [
-                'user' => (new User())->getOne(['id' => $id])
-            ]
-        );
-    }
-
-    protected function render($template, $params = [])
-    {
-        $content = $this->renderTemplate($template, $params);
-        return $this->renderTemplate('/layouts/main', [
-            'content' => $content
-        ]);
-    }
-
-    protected function renderTemplate($template, $params = [])
-    {
-        ob_start();
-        extract($params);
-        include dirname(__DIR__) . '/views/' . $template . '.php';
-        return ob_get_clean();
     }
 }

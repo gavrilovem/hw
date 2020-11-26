@@ -1,13 +1,9 @@
 <?php
-//include dirname(__DIR__) . '/services/Autoload.php';
-//spl_autoload_register([(new App\services\Autoload), 'loadClass']);
-
 include dirname(__DIR__) . '/vendor/autoload.php';
-$loader = new Composer\Autoload\ClassLoader();
-$loader->register(true);
 
 $db = new App\services\DB();
 $user = new App\models\User();
+session_start();
 
 $controller = 'user';
 if (!empty($_GET['c'])) {

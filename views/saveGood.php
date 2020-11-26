@@ -15,7 +15,7 @@
         </label>
         <br><br>
         <label>Цена
-            <input type="number" name="good[price]" value="<?= $good['price'] ?>" placeholder="price" required>
+            <input type="number" step="any" name="good[price]" value="<?= $good['price'] ?>" placeholder="price" required>
         </label>
         <br><br>
         <label>Категория
